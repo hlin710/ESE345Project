@@ -1,0 +1,188 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+
+entity ALUmm is
+	port(
+		
+		instruct : in STD_LOGIC_VECTOR(4 downto 0); 
+		rs1 : in STD_LOGIC_VECTOR(127 downto 0);
+		rs2 : in STD_LOGIC_VECTOR(127 downto 0); 
+		rd : out STD_LOGIC_VECTOR(127 downto 0) -- destination reg
+	);
+end ALUmm;
+
+--}} End of automatically maintained section
+
+architecture ALUmm of ALUmm is
+begin
+	process(rs1, rs2, instruct)
+	
+	variable reg1 : signed(15 downto 0); -- Used in AHS, SFS
+	variable reg2 : signed(15 downto 0); -- Used in AHS, SFHS
+	variable sum : signed(16 downto 0); -- extra bit for overflow, AHS
+	variable diff :signed(16 downto 0); -- extra bit for overflow, SFS
+		
+	variable reg_result : signed(127 downto 0); -- Used in 
+	
+	variable reg3 : signed (31 downto 0); -- Used in MAXWS, MINWS, CLZW
+	variable reg4 : signed (31 downto 0);	-- Used in MAXWS, MINWS
+	variable product : signed(31 downto 0); -- Used in MAXWS, MINWS
+	
+	variable word_val :std_logic_vector(31 downto 0); -- Used in CLZW
+	variable count : integer range 0 to 32;	
+	
+	variable w1, w2 : unsigned(31 downto 0); -- Used in SFWU
+	variable result : unsigned (31 downto 0); 
+	
+	begin
+		
+	case instruct is
+		--when "xxxx0000" =>	-- NOP
+		--when "xxxx0001" => -- SHRHI
+		--when "xxxx0010" => -- AU	 
+		--when "xxxx0011" =>	-- CNT1H	
+		
+		
+		
+		when "01101" => ---------------------------------AHS ----------------------------------------------
+			-- Extract 16 bits from each reg, starting from 15 to 0
+			for i in 0 to 7 loop
+				reg1 := signed(rs1((i*16 + 15) downto (i*16)));
+				reg2 := signed(rs2((i*16 + 15) downto (i*16)));
+				
+				-- add and saturate
+				-- (not sure if resize is allowed), change later if not
+				sum := resize(reg1, 17) + resize(reg2, 17);
+				if sum > 32767 then
+					-- edit the respective bit positions	 to_signed(integer_value, length)
+					reg_result((i*16 + 15) downto (i*16)) :=  to_signed(32767, 16);
+				elsif sum < -32768 then
+					reg_result((i*16 + 15) downto (i*16)) := to_signed(-32766,16);
+				
+				else -- we can use the respective sums
+					reg_result((i*16 + 15) downto (i*16)) := resize(sum,16);
+				end if;
+			end loop;
+			rd <= std_logic_vector(reg_result);
+		
+		when "01110" =>	---------------------------------- OR --------------------------------------------- 
+			rd <= rs1 or rs2;
+		
+		when "01111" =>	---------------------------------- BCW ----------------------------------
+		rd(31 downto 0) <= rs1(127 downto 96);
+		rd(63 downto 32) <= rs1(127 downto 96);
+		rd(95 downto 64) <= rs1(127 downto 96);
+		rd(127 downto 96) <= rs1(127 downto 96);
+			
+		
+		when "10000" => ---------------------------------- MAXWS ----------------------------------
+		for i in 0 to 3 loop
+			reg3 := signed(rs1((i*32+31) downto (i*32)));
+			reg4 := signed(rs2((i*32+31) downto (i*32)));
+			
+			if reg3 > reg4 then
+				reg_result((i*32+31) downto (i*32)) := reg3;
+			else
+				reg_result((i*32+31) downto (i*32)) := reg4;
+			end if;
+		end loop;
+			rd <= std_logic_vector(reg_result);
+			
+		
+		when "10001" =>	--------------------------------- MINWS ----------------------------------  
+		for i in 0 to 3 loop
+			reg3 := signed(rs1((i*32+31) downto (i*32)));
+			reg4 := signed(rs2((i*32+31) downto (i*32)));
+			
+			-- reg3 bigger, put result as reg4
+			if reg3 > reg4 then
+				reg_result((i*32+31) downto (i*32)) := reg4;
+			else
+				reg_result((i*32+31) downto (i*32)) := reg3;
+			end if;
+		end loop;
+		
+		rd <= std_logic_vector(reg_result); 
+		
+		
+		--when "10010" => -----------------------------MLHU (UNSIGNED) ----------------------------------
+--		for i in 0 to 3 loop
+--			-- convert 16 rightmost bits into val
+--			reg3 := unsigned(rs1((i*32+15) downto (i*32)));
+--    		reg4 := unsigned(rs2((i*32+15) downto (i*32)));
+--			
+--			-- Multiply the 16 rightmost
+--			product := std_logic_vector(reg3 * reg4);
+--			rd((i*31 + 32) downto (i*32)) := product;
+--		end loop;
+		
+		when "10011" =>	---------------------------- MLHCU (UNSIGNED) --------------------------
+		
+		--multiply rs1 with the instruction field rs2 (5 bit)
+		
+		when "10100" =>	----------------------------------- AND -----------------------------------
+			rd <= rs1 and rs2;
+		
+		when "10101" =>	------------------------------------CLZW ----------------------------------
+		for i in 0 to 3 loop
+			word_val := rs1((i*32 + 31) downto (i*32));
+			
+			-- counter for # of zeros
+			count := 0;
+			
+			if word_val = X"00000000" then
+				count := 32;
+			else -- need to look for first 1
+				for j in 31 downto 0 loop
+					if word_val(j) = '0' then
+						count := count + 1;
+					else -- it is a 1, then STOP
+					   exit;
+					end if;
+				end loop;
+			 end if;
+			 
+			 rd((i*32 + 31) downto (i*32)) <= std_logic_vector(to_unsigned(count, 32));
+		end loop; 
+			
+		when "10110" => ---------------------------------- ROTW ----------------------------------
+		
+		
+		
+		when "10111" =>	-- SFWU	unsigned 32 bits subtract 
+		for i in 0 to 3 loop
+			w1 := unsigned(rs1((i*32 + 31) downto (i*32))); 
+			w2 := unsigned(rs2((i*32 + 31) downto (i*32)));
+			result := w2 - w1;
+			
+			rd((i*32 + 31) downto (i*32)) <= std_logic_vector(result);
+		end loop;
+		
+		when "11000" => -------------------------------- SFHS ----------------------------------
+		for i in 0 to 7 loop							  
+			
+			reg1 := signed(rs1((i*16 + 15) downto (i*16)));
+			reg2 := signed(rs2((i*16 + 15) downto (i*16)));
+			
+			diff := resize(reg2, 17) - resize(reg1, 17);
+			if diff > 32767 then -- pos overflow, fix
+				reg_result((i*16 + 15) downto (i*16)) := to_signed(32767, 16);
+				
+			elsif diff < -32767 then --neg overflow, fix
+				reg_result((i*16 + 15) downto (i*16)) := to_signed(-32767, 16);	
+			
+			else -- value works, keep original 
+				reg_result((i*16 + 15) downto (i*16)) := resize(diff,16);
+			end if;
+		end loop;
+		rd <= std_logic_vector(reg_result);
+		
+		
+		when others =>
+		
+		end case;
+	end process;
+
+end ALUmm;
