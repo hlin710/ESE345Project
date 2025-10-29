@@ -46,7 +46,7 @@ begin
 	variable immediate : unsigned(15 downto 0);		-- 16-bit immediate value
 	
 	-- R4 INSTRUCTION FORMAT FIELDS
-	variable long_mode : std_logic;
+	--variable long_mode : std_logic;
 	variable li_sa_hl : STD_LOGIC_VECTOR(2 downto 0);	
 	constant signed_long_64_min : signed(63 downto 0) := to_signed(-2**63, 64);
 	constant signed_int_32_min : signed(31 downto 0) := to_signed(-2**31, 32);
@@ -62,7 +62,7 @@ begin
 	variable diff_long_64 : signed(64 downto 0);
 	
 	-- R3 INSTRUCTION FORMAT FIELDS
-	variable r3_opcode : STD_LOGIC_VECTOR(22 downto 15); -- Bits [22:15] represent opcode
+	variable r3_opcode : STD_LOGIC_VECTOR(7 downto 0); -- Bits [22:15] represent opcode
 	
 	variable shift : integer range 0 to 15;
 	variable rs2_5bit : std_logic_vector(4 downto 0);
@@ -109,11 +109,10 @@ begin
 		   --==========================================================================================================--	
 			-- R4 instructions
 			when "10" =>
-			long_mode := instruction_format(23);
+			--long_mode := instruction_format(22);
 			li_sa_hl := instruction_format(22 downto 20);
 			output := (others => '0');
-			
-			if long_mode = '0' then	
+				
 				case li_sa_hl is
 					-- Signed Integer Multiply - Add Low with Saturation
 					when "000" =>
@@ -161,7 +160,7 @@ begin
 						output(127 downto 96) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			--==========================================================================================================--		
 					-- Signed Integer Multiply - Add High with Saturation
 					when "001" =>
@@ -209,7 +208,7 @@ begin
 						output(127 downto 96) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			   --==========================================================================================================--
 					-- Signed Integer Multiply - Subtract Low with Saturation
 					when "010" =>
@@ -232,7 +231,7 @@ begin
 					elsif diff_int_32 < resize(signed_int_32_min, 33) then
 						output(63 downto 32) := STD_LOGIC_VECTOR(signed_int_32_min);
 					else
-						output(63 downto 32) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
+						output(63 downto 32) := STD_LOGIC_VECTOR(diff_int_32(31 downto 0));
 					end if;
 					
 					-- Word 2 [95:64]
@@ -254,10 +253,10 @@ begin
 					elsif diff_int_32 < resize(signed_int_32_min, 33) then
 						output(127 downto 96) := STD_LOGIC_VECTOR(signed_int_32_min);
 					else
-						output(127 downto 96) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
+						output(127 downto 96) := STD_LOGIC_VECTOR(diff_int_32(31 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			  --==========================================================================================================--
 					-- Signed Integer Multiply - Subtract High with Saturation
 					when "011" =>
@@ -280,7 +279,7 @@ begin
 					elsif diff_int_32 < resize(signed_int_32_min, 33) then
 						output(63 downto 32) := STD_LOGIC_VECTOR(signed_int_32_min);
 					else
-						output(63 downto 32) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
+						output(63 downto 32) := STD_LOGIC_VECTOR(diff_int_32(31 downto 0));
 					end if;
 					
 					-- Word 2 [95:64]
@@ -302,23 +301,17 @@ begin
 					elsif diff_int_32 < resize(signed_int_32_min, 33) then
 						output(127 downto 96) := STD_LOGIC_VECTOR(signed_int_32_min);
 					else
-						output(127 downto 96) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
+						output(127 downto 96) := STD_LOGIC_VECTOR(diff_int_32(31 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			  --==========================================================================================================--	
-			 	 when others => 
-				  output := (others => '0');
-				  rd <= output;
-				end case; 
-				
-			else		
-				case li_sa_hl is
 					-- Signed Long Integer Multiply - Add Low with Saturation
-					when "100" =>
+					when "100" =>										 
 					-- Word 0 [63:0]
 					product_long_64 := signed(rs2(31 downto 0)) * signed(rs3(31 downto 0));
-					sum_long_64 := resize(signed(rs1(63 downto 0)), 65) + resize(product_long_64, 65);
+					sum_long_64 := resize(signed(rs1(63 downto 0)), 65) + resize(product_long_64, 65);		 
+					
 					if sum_long_64 > resize(signed_long_64_max, 65) then
 						output(63 downto 0) := STD_LOGIC_VECTOR(signed_long_64_max);
 					elsif sum_long_64 < resize(signed_long_64_min, 65) then
@@ -330,6 +323,7 @@ begin
 					-- Word 1 [127:64]
 					product_long_64 := signed(rs2(95 downto 64)) * signed(rs3(95 downto 64));
 					sum_long_64 := resize(signed(rs1(127 downto 64)), 65) + resize(product_long_64, 65);
+					
 					if sum_long_64 > resize(signed_long_64_max, 65) then
 						output(127 downto 64) := STD_LOGIC_VECTOR(signed_long_64_max);
 					elsif sum_long_64 < resize(signed_long_64_min, 65) then
@@ -338,7 +332,7 @@ begin
 						output(127 downto 64) := STD_LOGIC_VECTOR(sum_long_64(63 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			   --==========================================================================================================--	
 					-- Signed Long Integer Multiply - Add High with Saturation
 					when "101" =>
@@ -364,7 +358,7 @@ begin
 						output(127 downto 64) := STD_LOGIC_VECTOR(sum_long_64(63 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			   --==========================================================================================================--					
 					-- Signed Long Integer Multiply - Subtract Low with Saturation
 					when "110" =>
@@ -390,7 +384,7 @@ begin
 						output(127 downto 64) := STD_LOGIC_VECTOR(diff_long_64(63 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			   --==========================================================================================================--	
 					-- Signed Long Integer Multiply - Subtract High with Saturation
 					when "111" =>
@@ -416,13 +410,13 @@ begin
 						output(127 downto 64) := STD_LOGIC_VECTOR(diff_long_64(63 downto 0));
 					end if;
 					
-					rd <= output;
+					--rd <= output;
 			   --==========================================================================================================--	
 			   	when others => 
 				   output := (others => '0');
-				   rd <= output;
-				end case;	
-			end if;
+				end case;
+				report "DEBUG: output = " & to_hstring(output);
+			  rd <= output;
 						
 		
 			-- R3 instructions 
@@ -430,18 +424,18 @@ begin
 			r3_opcode := instruction_format(22 downto 15);
 			output := (others => '0');
 			
-			case r3_opcode(18 downto 15) is
+			case r3_opcode(3 downto 0) is
 				-- NOP
 				when "0000" => 
 				rd <= rd;
 		      --==========================================================================================================--		
 				-- SHRHI
 				when "0001" =>
-				shift := to_integer(unsigned(rs2_5bit(3 downto 0)));
+				shift := to_integer(unsigned(rs2(3 downto 0)));
 					for i in 0 to 7 loop
-					reg_result((i*16+15) downto (i*16)) := signed(shift_right(unsigned(rs1((i*16+15) downto (i*16))), shift));
+						output((i*16+15) downto (i*16)) := std_logic_vector(shift_right(unsigned(rs1((i*16+15) downto (i*16))), shift));
 					end loop;
-				rd <= std_logic_vector(reg_result);
+				rd <= output;
 			 --==========================================================================================================--	
 				--AU
 				when "0010" =>
