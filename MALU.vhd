@@ -18,13 +18,10 @@
 --
 -------------------------------------------------------------------------------
 
---{{ Section below this comment is automatically maintained
---    and may be overwritten
---{entity {MALU} architecture {behavioral}}
-
 library IEEE;
 use IEEE.std_logic_1164.all;  
-use IEEE.numeric_std.all;
+use IEEE.numeric_std.all; 
+use work.all;
 
 entity MALU is
 	port(
@@ -40,11 +37,12 @@ architecture behavioral of MALU is
 begin
 
 	process(all)
-	variable opcode : STD_LOGIC_VECTOR(4 downto 0); -- 5-bit opcode
-	variable output : STD_LOGIC_VECTOR(127 downto 0);		-- output register
+	-- variable opcode : STD_LOGIC_VECTOR(4 downto 0);          -- 5-bit opcode
+	variable output : STD_LOGIC_VECTOR(127 downto 0);	    -- output register
+	variable format_id : STD_LOGIC_VECTOR(1 downto 0);	    
 	
 	-- LOAD IMMEDIATE FIELDS
-	variable count_li : integer;					-- Used to identify the load index (3-bits, so 0-7) 
+	variable load_index : integer;				-- Used to identify the load index (3-bits, so 0-7) 
 	variable immediate : unsigned(15 downto 0);		-- 16-bit immediate value
 	
 	-- R4 INSTRUCTION FORMAT FIELDS
@@ -96,20 +94,21 @@ begin
 	variable num_rot : integer range 0 to 31;  -- Used in ROTW, max value: 2^5 - 1 = 31
 	
 	begin
-		opcode := instruction_format(24 downto 20); 	-- Extract the first 5 bits for opcode
+		format_id := instruction_format(24 downto 23);
+		-- opcode := instruction_format(24 downto 20); 	-- Extract the first 5 bits for opcode
 		output := (others => '0');					-- Clear output
 		
-		case opcode is
+		case format_id is
 			-- Load Immediate
-			when "00000" =>
-			count_li := to_integer(unsigned(instruction_format(23 downto 21))); 		-- Extract the load index 
+			when "00" | "01" =>
+			load_index := to_integer(unsigned(instruction_format(23 downto 21))); 		-- Extract the load index 
 			immediate := unsigned(instruction_format(20 downto 5));			 		-- Extract the immediate value
 			output := rs1;									 			 		-- Reads register in which the source = destination
-			output(count_li*16 + 15 downto count_li*16) := std_logic_vector(immediate);	-- Place immediate value in correct load index field 
+			output(load_index*16 + 15 downto load_index*16) := std_logic_vector(immediate);	-- Place immediate value in correct load index field 
 			rd <= output;								 				 		-- Output new result
 		   --==========================================================================================================--	
 			-- R4 instructions
-			when "10000" =>
+			when "10" =>
 			long_mode := instruction_format(23);
 			li_sa_hl := instruction_format(22 downto 20);
 			output := (others => '0');
@@ -427,7 +426,7 @@ begin
 						
 		
 			-- R3 instructions 
-			when "11000" =>
+			when "11" =>
 			r3_opcode := instruction_format(22 downto 15);
 			output := (others => '0');
 			
