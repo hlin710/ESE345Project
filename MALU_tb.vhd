@@ -278,25 +278,113 @@ begin
 		report "All cnt1h tests complete!";
 		----------------------------------------------------------------
 		-- AHS --
-		report "=== STARTING CNT1H TESTBENCH ===";
+		report "=== STARTING AHS TESTBENCH ===";
 		
-		-- TEST 1 (all ones)
-		rs1 <= x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-		rs2 <= x"00000000000000000000000000000000"; -- not needed so reset  
-		instruction_format <= "11" & "00000011" & "000000000000000";
-		wait for period; 
+		-- TEST 1 (no saturation)
+		rs1 <= x"00010002000300040005000600070008"; 
+		rs2 <= x"00080007000600050004000300020001";
+		instruction_format <= "11" & "00000100" & "000010000010000";
+		wait for period; 	   
 		
-		-- TEST 2 (alternating)
-		rs1 <= x"AAAA5555AAAA5555AAAA5555AAAA5555"; 
-		instruction_format <= "11" & "00000011" & "000000000000000";
+		-- TEST 2 (+ overflow)
+		rs1 <= x"7FFF7FFF7FFF7FFF7FFF7FFF7FFF7FFF";  
+		rs2 <= x"00010001000100010001000100010001";
+		instruction_format <= "11" & "00000100" & "000000000000000";
 		wait for period;
 		
-		report "All cnt1h tests complete!";
+		-- TEST 3 (- overflow)
+		rs1 <= x"80008000800080008000800080008000";  
+		rs2 <= x"FFFF8000FFFF8000FFFF8000FFFF8000";  
+		instruction_format <= "11" & "00000100" & "000000000000000";
+		wait for period;
+		
+		report "All ahs tests complete!";
+		----------------------------------------------------------------
+		-- OR --
+		report "=== STARTING OR TESTBENCH ===";
+		
+		-- TEST 1 (random)
+		rs1 <= x"12345678ABCDEF00FF00FF00FF00FF00";
+		rs2 <= x"00FF00FF00FF00FF00FF00FF00FF00FF";
+		instruction_format <= "11" & "00000101" & "000001000000000";
+		wait for period;
+		
+		-- TEST 2 (alternating bits)
+		rs1 <= x"F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0";
+		rs2 <= x"0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F";
+		instruction_format <= "11" & "00000101" & "000000000000001";
+		wait for period; 	   
+		
+		report "All or tests complete!";
+		----------------------------------------------------------------
+		-- BCW --
+		report "=== STARTING BCW TESTBENCH ===";
+		
+		-- TEST 1 (random)
+		rs1 <= x"DEADBEEFCAFEBABE0123456789ABCDEF";
+		rs2 <= x"00000000000000000000000000000000"; -- not needed so reset
+		instruction_format <= "11" & "00000110" & "000000000000001";
+		wait for period;
+		
+		-- TEST 2 (alternating bits)
+		rs1 <= x"A5A5A5A55A5A5A5AFFFFFFFF00000000";
+		instruction_format <= "11" & "00000110" & "000000000000001";
+		wait for period;
+		
+		report "All bcw tests complete!";
+		----------------------------------------------------------------
+		-- MAXWS --
+		report "=== STARTING MAXWS TESTBENCH ===";
+		
+		-- TEST 1 (+)
+		rs1 <= x"00000001000000020000000300000004";  
+		rs2 <= x"00000004000000030000000200000001";
+		instruction_format <= "11" & "00000111" & "000000000000000";
+		wait for period;
+		
+		-- TEST 2 (mixed signs)
+		rs1 <= x"80000000FFFFFFFF7FFFFFFF00000000";  
+		rs2 <= x"7FFFFFFF8000000000000000FFFFFFFF";
+		instruction_format <= "11" & "00000111" & "000000000000000";
+		wait for period;
+		
+		-- TEST 3 (largest and smallest signed)
+		rs1 <= x"7FFFFFFF800000007FFFFFFF80000000";  
+		rs2 <= x"800000007FFFFFFF800000007FFFFFFF"; 
+		instruction_format <= "11" & "00000111" & "000000000000000";
+		wait for period;
+		
+		report "All maxws tests complete!";
+		----------------------------------------------------------------
+		-- MINWS --
+		report "=== STARTING MINWS TESTBENCH ===";
+		
+		-- TEST 1 (+)
+		rs1 <= x"00000001000000020000000300000004";  
+		rs2 <= x"00000004000000030000000200000001";
+		instruction_format <= "11" & "00001000" & "000000000000000";
+		wait for period;
+		
+		-- TEST 2 (mixed signs)
+		rs1 <= x"80000000FFFFFFFF7FFFFFFF00000000";  
+		rs2 <= x"7FFFFFFF8000000000000000FFFFFFFF";
+		instruction_format <= "11" & "00001000" & "000000000000000";
+		wait for period;
+		
+		-- TEST 3 (largest and smallest signed)
+		rs1 <= x"7FFFFFFF800000007FFFFFFF80000000";  
+		rs2 <= x"800000007FFFFFFF800000007FFFFFFF"; 
+		instruction_format <= "11" & "00001000" & "000000000000000";
+		wait for period;
+		
+		report "All minws tests complete!";
+		----------------------------------------------------------------
+		-- MINWS --
+		report "=== STARTING MINWS TESTBENCH ===";
 		
 		
 		
 		
-	
 
 
 
@@ -342,15 +430,6 @@ begin
 		
 
 		
-	------------------------------------------------
-
-	 --  -- Test 1 (AHS)
-	--	rs1 <= x"00010002000300040005000600070008";  -- Halfwords: 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008
-	--	rs2 <= x"00010001000100010001000100010001";  -- Halfwords: eight 0001
-	--	instruction_format <= "11" & "01010100000000001001101"; 
-	--	wait for period;
-		
-
 
 		
 				

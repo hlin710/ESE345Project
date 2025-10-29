@@ -73,7 +73,7 @@ begin
 	variable sum : signed(16 downto 0); -- extra bit for overflow, AHS
 	variable diff :signed(16 downto 0); -- extra bit for overflow, SFS
 		
-	variable reg_result : signed(127 downto 0); -- Used in 
+	variable reg_result : signed(127 downto 0); 
 	
 	variable reg3 : signed (31 downto 0); -- Used in MAXWS, MINWS, CLZW
 	variable reg4 : signed (31 downto 0);	-- Used in MAXWS, MINWS
@@ -415,7 +415,6 @@ begin
 			   	when others => 
 				   output := (others => '0');
 				end case;
-				report "DEBUG: output = " & to_hstring(output);
 			  rd <= output;
 						
 		
@@ -477,7 +476,7 @@ begin
 						reg_result((i*16 + 15) downto (i*16)) :=  to_signed(32767, 16);
 				
 					elsif sum < to_signed(-32768, 17) then
-						reg_result((i*16 + 15) downto (i*16)) := to_signed(-32766,16);
+						reg_result((i*16 + 15) downto (i*16)) := to_signed(-32768,16);
 				
 					else -- we can use the respective sums
 						reg_result((i*16 + 15) downto (i*16)) := resize(sum,16);
