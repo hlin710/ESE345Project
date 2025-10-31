@@ -87,7 +87,8 @@ begin
 	variable half_rs1, half_rs2 : unsigned(15 downto 0);
 	
 	variable w3 : unsigned(15 downto 0); -- Used in MLHCU
-	variable w0 : unsigned(15 downto 0); -- Used in MLHCU 														   
+	variable w0 : unsigned(15 downto 0); -- Used in MLHCU
+	
 	
 	variable rotated_rs1 : std_logic_vector(31 downto 0); -- Used in ROTW
 	variable temp_lsb : std_logic; -- Used in ROTW
@@ -538,11 +539,15 @@ begin
 				end loop;
 			--==========================================================================================================--	
 				--MLHCU
-				when "1010" =>									
-				w0 := resize(unsigned(instruction_format(14 downto 10)), 16);
+				when "1010" =>
+				-- store the unsigned 5 bit value of rs2 into 16 bit vector
+				w0 := resize(unsigned(instruction_format(14 downto 10)), 16); 
 				for i in 0 to 3 loop
-					w3 := unsigned(rs1((i*32 + 15) downto (i*32)));
-					product := resize((w0*w3), 32);
+					-- store the rightmost 16 bits of rs1 into 16 bit vector
+					w3 := unsigned(rs1(i*32 + 15 downto i*32));
+					-- multiply the stored 5bit rs2 and 16bit rs1
+					product := w0*w3;
+					-- store in respective rd
 					rd((i*32 + 31) downto (i*32)) <= std_logic_vector(product);
 				end loop;
 		     --==========================================================================================================--	

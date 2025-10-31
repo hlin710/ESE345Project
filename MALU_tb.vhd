@@ -425,23 +425,23 @@ begin
 --		
 --		report "All mlhu tests complete!";
 --		----------------------------------------------------------------
---		-- MLHCU --
---		report "=== STARTING MLHCU TESTBENCH ===";
+		-- MLHCU --
+		report "=== STARTING MLHCU TESTBENCH ===";
 --		
 --		-- TEST 1 (mixed bits)
 --		rs1 <= x"00010000FFFF1234000A0005ABCD0102";
 --		rs2 <= x"00000000000000000000000000000000"; -- value is irrelevant so reset
 --		instruction_format <= "11" & "00001010" & "000010100000000";  -- rs2 = 00001 = 1
 --		wait for period;
---		
---		-- TEST 2 (large constant)
---		rs1 <= x"00010002000300040005000600070008";
---		instruction_format <= "11" & "10101010" & "111110000000000"; -- rs2 = 11111 = 31
---		wait for period;
---		
---		-- TEST 3 (max halfword * max constant) <- test case not working (FIX)
+		
+		-- TEST 2 (large constant)
+		rs1 <= x"00010002000300040005000600070008";
+		instruction_format <= "11" & "10101010" & "111110000000000"; -- rs2 = 11111 = 31
+		wait for period;
+----		
+--		-- TEST 3 (max halfword * max constant) rs2 = 11111 = 31
 --		rs1 <= x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
---		instruction_format <= "11" & "10101010" & "111110000000000";
+--		instruction_format <= "11" & "10101010" & "11111"& "00000"& "00000";
 --		wait for period;
 --		
 --		report "All mlhcu tests complete!";
@@ -452,7 +452,7 @@ begin
 --		-- TEST 1
 --		rs1 <= x"0123456789ABCDEF0011223344556677";
 --		rs2 <= x"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
---		instruction_format <= "11" & "00001011" & "000000000000000";
+--		instruction_format <= "11" & "00001011" & "000000000000000";						   
 --		wait for period;
 --		
 --		-- TEST 2
@@ -554,13 +554,7 @@ begin
 --
 --		report "All sfhs tests complete!";
 ----------------------------------------------------------------------------------------------------------------		
-		-- TEST 1 (no saturation)
-		rs1 <= x"7FFFFFFFFFFFFFFF7FFFFFFFFFFFFFFF";
-		rs2 <= x"00000002000000020000000200000002";
-		rs3 <= x"7FFFFFFF7FFFFFFF7FFFFFFF7FFFFFFF";
-		instruction_format <= "10" & "100" & "00000000000000000000";
-		wait for period;
-		-- Expected: rd = 7FFFFFFFFFFFFFFF7FFFFFFFFFFFFFFF
+
 	
 		report "=== FINISHED MALU TESTBENCH ===";
 	
