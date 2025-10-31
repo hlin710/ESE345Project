@@ -45,13 +45,13 @@ begin
 	variable load_index : integer;				-- Used to identify the load index (3-bits, so 0-7) 
 	variable immediate : unsigned(15 downto 0);		-- 16-bit immediate value
 	
-	-- R4 INSTRUCTION FORMAT FIELDS
+	-- R4 INSTRUCTION FORMAT FIELDS			   
 	--variable long_mode : std_logic;
 	variable li_sa_hl : STD_LOGIC_VECTOR(2 downto 0);	
-	constant signed_long_64_min : signed(63 downto 0) := to_signed(-2**63, 64);
-	constant signed_int_32_min : signed(31 downto 0) := to_signed(-2**31, 32);
-	constant signed_long_64_max : signed(63 downto 0) := to_signed(2**63 - 1, 64);
-	constant signed_int_32_max : signed(31 downto 0) := to_signed(2**31 - 1, 32);
+	constant signed_long_64_min : signed(63 downto 0) := signed(b"1000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000");
+	constant signed_int_32_min : signed(31 downto 0) := signed(b"10000000000000000000000000000000");
+	constant signed_long_64_max : signed(63 downto 0) := signed(b"0111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111");
+	constant signed_int_32_max : signed(31 downto 0) := signed(b"01111111111111111111111111111111");
 	
 	variable product_int_32 : signed(31 downto 0);
 	variable sum_int_32 : signed(32 downto 0);
@@ -65,7 +65,6 @@ begin
 	variable r3_opcode : STD_LOGIC_VECTOR(7 downto 0); -- Bits [22:15] represent opcode
 	
 	variable shift : integer range 0 to 15;
-	variable rs2_5bit : std_logic_vector(4 downto 0);
 	variable cnt : integer range 0 to 16;
 	
 	variable reg1 : signed(15 downto 0); -- Used in AHS, SFS
@@ -84,6 +83,8 @@ begin
 	
 	variable w1, w2 : unsigned(31 downto 0); -- Used in SFWU
 	variable result : unsigned (31 downto 0); 
+	
+	variable half_rs1, half_rs2 : unsigned(15 downto 0);
 	
 	variable w3 : unsigned(15 downto 0); -- Used in MLHCU
 	variable w0 : unsigned(15 downto 0); -- Used in MLHCU 														   
@@ -307,7 +308,7 @@ begin
 					--rd <= output;
 			  --==========================================================================================================--	
 					-- Signed Long Integer Multiply - Add Low with Saturation
-					when "100" =>										 
+					when "100" =>									 
 					-- Word 0 [63:0]
 					product_long_64 := signed(rs2(31 downto 0)) * signed(rs3(31 downto 0));
 					sum_long_64 := resize(signed(rs1(63 downto 0)), 65) + resize(product_long_64, 65);		 
@@ -430,7 +431,7 @@ begin
 		      --==========================================================================================================--		
 				-- SHRHI
 				when "0001" =>
-				shift := to_integer(unsigned(rs2(3 downto 0)));
+				shift := to_integer(unsigned(instruction_format(13 downto 10)));
 					for i in 0 to 7 loop
 						output((i*16+15) downto (i*16)) := std_logic_vector(shift_right(unsigned(rs1((i*16+15) downto (i*16))), shift));
 					end loop;
@@ -526,19 +527,19 @@ begin
 				--MLHU
 				when "1001" =>
 				for i in 0 to 3 loop
+	
 					--convert 16 rightmost bits into val
-					w1 := unsigned(rs1((i*32+15) downto (i*32)));
-					w2 := unsigned(rs2((i*32+15) downto (i*32)));
+					half_rs1 := unsigned(rs1((i*32+15) downto (i*32)));
+					half_rs2 := unsigned(rs2((i*32+15) downto (i*32)));
 					
 					-- Multiply the 16 rightmost
-					product := resize((w1 * w2), 32);
+					product := resize((half_rs1 * half_rs2), 32);
 					rd((i*32 + 31) downto (i*32)) <= std_logic_vector(product);
 				end loop;
 			--==========================================================================================================--	
 				--MLHCU
-				when "1010" =>
-				--multiply rs1 with the instruction field rs2 (5 bit)									
-				w0 := resize(unsigned(rs2_5bit),16); 
+				when "1010" =>									
+				w0 := resize(unsigned(instruction_format(14 downto 10)), 16);
 				for i in 0 to 3 loop
 					w3 := unsigned(rs1((i*32 + 15) downto (i*32)));
 					product := resize((w0*w3), 32);
@@ -604,8 +605,8 @@ begin
 					
 					if diff > to_signed(32767,17) then -- pos overflow, fix
 						reg_result((i*16 + 15) downto (i*16)) := to_signed(32767, 16);
-					elsif diff < to_signed(-32767,17) then --neg overflow, fix
-						reg_result((i*16 + 15) downto (i*16)) := to_signed(-32767, 16);	
+					elsif diff < to_signed(-32768,17) then --neg overflow, fix
+						reg_result((i*16 + 15) downto (i*16)) := to_signed(-32768, 16);	
 					else -- value works, keep original 
 						reg_result((i*16 + 15) downto (i*16)) := resize(diff,16);
 					end if;
