@@ -2,7 +2,7 @@
 --
 -- Title       : MALU
 -- Design      : MALU
--- Author      : saphalbaral
+-- Author      : saphalbaral, harrylin
 -- Company     : Stony Brook University
 --
 -------------------------------------------------------------------------------
@@ -14,8 +14,8 @@
 --
 -------------------------------------------------------------------------------
 --
--- Description : 
---
+-- Description : All multimedia ALU functions at the 3rd (execute) pipelines stage after forwarding.
+-- 
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -37,7 +37,6 @@ architecture behavioral of MALU is
 begin
 
 	process(all)
-	-- variable opcode : STD_LOGIC_VECTOR(4 downto 0);          -- 5-bit opcode
 	variable output : STD_LOGIC_VECTOR(127 downto 0);	    -- output register
 	variable format_id : STD_LOGIC_VECTOR(1 downto 0);	    
 	
@@ -46,7 +45,6 @@ begin
 	variable immediate : unsigned(15 downto 0);		-- 16-bit immediate value
 	
 	-- R4 INSTRUCTION FORMAT FIELDS			   
-	--variable long_mode : std_logic;
 	variable li_sa_hl : STD_LOGIC_VECTOR(2 downto 0);	
 	constant signed_long_64_min : signed(63 downto 0) := signed(b"1000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000");
 	constant signed_int_32_min : signed(31 downto 0) := signed(b"10000000000000000000000000000000");
@@ -87,8 +85,7 @@ begin
 	variable half_rs1, half_rs2 : unsigned(15 downto 0);
 	
 	variable w3 : unsigned(15 downto 0); -- Used in MLHCU
-	variable w0 : unsigned(15 downto 0); -- Used in MLHCU
-	
+	variable w0 : unsigned(15 downto 0); -- Used in MLHCU 														   
 	
 	variable rotated_rs1 : std_logic_vector(31 downto 0); -- Used in ROTW
 	variable temp_lsb : std_logic; -- Used in ROTW
@@ -97,7 +94,6 @@ begin
 	
 	begin
 		format_id := instruction_format(24 downto 23);
-		-- opcode := instruction_format(24 downto 20); 	-- Extract the first 5 bits for opcode
 		output := (others => '0');					-- Clear output
 		
 		case format_id is
@@ -105,13 +101,12 @@ begin
 			when "00" | "01" =>
 			load_index := to_integer(unsigned(instruction_format(23 downto 21))); 		-- Extract the load index 
 			immediate := unsigned(instruction_format(20 downto 5));			 		-- Extract the immediate value
-			output := rs1;									 			 		-- Reads register in which the source = destination
+			output := rd;									 			 		-- Reads register in which the source = destination
 			output(load_index*16 + 15 downto load_index*16) := std_logic_vector(immediate);	-- Place immediate value in correct load index field 
 			rd <= output;								 				 		-- Output new result
 		   --==========================================================================================================--	
 			-- R4 instructions
 			when "10" =>
-			--long_mode := instruction_format(22);
 			li_sa_hl := instruction_format(22 downto 20);
 			output := (others => '0');
 				
@@ -161,8 +156,6 @@ begin
 					else
 						output(127 downto 96) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
 					end if;
-					
-					--rd <= output;
 			--==========================================================================================================--		
 					-- Signed Integer Multiply - Add High with Saturation
 					when "001" =>
@@ -209,8 +202,6 @@ begin
 					else
 						output(127 downto 96) := STD_LOGIC_VECTOR(sum_int_32(31 downto 0));
 					end if;
-					
-					--rd <= output;
 			   --==========================================================================================================--
 					-- Signed Integer Multiply - Subtract Low with Saturation
 					when "010" =>
@@ -257,8 +248,6 @@ begin
 					else
 						output(127 downto 96) := STD_LOGIC_VECTOR(diff_int_32(31 downto 0));
 					end if;
-					
-					--rd <= output;
 			  --==========================================================================================================--
 					-- Signed Integer Multiply - Subtract High with Saturation
 					when "011" =>
@@ -305,8 +294,6 @@ begin
 					else
 						output(127 downto 96) := STD_LOGIC_VECTOR(diff_int_32(31 downto 0));
 					end if;
-					
-					--rd <= output;
 			  --==========================================================================================================--	
 					-- Signed Long Integer Multiply - Add Low with Saturation
 					when "100" =>									 
@@ -333,8 +320,6 @@ begin
 					else
 						output(127 downto 64) := STD_LOGIC_VECTOR(sum_long_64(63 downto 0));
 					end if;
-					
-					--rd <= output;
 			   --==========================================================================================================--	
 					-- Signed Long Integer Multiply - Add High with Saturation
 					when "101" =>
@@ -359,8 +344,6 @@ begin
 					else
 						output(127 downto 64) := STD_LOGIC_VECTOR(sum_long_64(63 downto 0));
 					end if;
-					
-					--rd <= output;
 			   --==========================================================================================================--					
 					-- Signed Long Integer Multiply - Subtract Low with Saturation
 					when "110" =>
@@ -385,8 +368,6 @@ begin
 					else
 						output(127 downto 64) := STD_LOGIC_VECTOR(diff_long_64(63 downto 0));
 					end if;
-					
-					--rd <= output;
 			   --==========================================================================================================--	
 					-- Signed Long Integer Multiply - Subtract High with Saturation
 					when "111" =>
@@ -411,14 +392,11 @@ begin
 					else
 						output(127 downto 64) := STD_LOGIC_VECTOR(diff_long_64(63 downto 0));
 					end if;
-					
-					--rd <= output;
 			   --==========================================================================================================--	
 			   	when others => 
 				   output := (others => '0');
 				end case;
 			  rd <= output;
-						
 		
 			-- R3 instructions 
 			when "11" =>
@@ -539,15 +517,11 @@ begin
 				end loop;
 			--==========================================================================================================--	
 				--MLHCU
-				when "1010" =>
-				-- store the unsigned 5 bit value of rs2 into 16 bit vector
-				w0 := resize(unsigned(instruction_format(14 downto 10)), 16); 
+				when "1010" =>									
+				w0 := resize(unsigned(instruction_format(14 downto 10)), 16);
 				for i in 0 to 3 loop
-					-- store the rightmost 16 bits of rs1 into 16 bit vector
-					w3 := unsigned(rs1(i*32 + 15 downto i*32));
-					-- multiply the stored 5bit rs2 and 16bit rs1
-					product := w0*w3;
-					-- store in respective rd
+					w3 := unsigned(rs1((i*32 + 15) downto (i*32)));
+					product := resize((w0*w3), 32);
 					rd((i*32 + 31) downto (i*32)) <= std_logic_vector(product);
 				end loop;
 		     --==========================================================================================================--	
