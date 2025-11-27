@@ -7,7 +7,7 @@
 --
 -------------------------------------------------------------------------------
 --
--- File        : c:/My_Designs/ese345proj1/ese345proj1part1/src/Instr_buf.vhd
+-- File        : c:/My_Designs/ese345proj1/ese345proj1part1/src/Prog_counter.vhd
 -- Generated   : Wed Nov 26 19:01:22 2025
 -- From        : Interface description file
 -- By          : ItfToHdl ver. 1.0
@@ -55,5 +55,6 @@ begin
 
     -- output current PC value
     pc_out <= pc_current;
+
 
 end architecture behavioral;
