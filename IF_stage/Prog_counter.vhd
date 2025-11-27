@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 --
--- Title       : Instr_buf
+-- Title       : Program counter
 -- Design      : ese345proj1part1
 -- Author      : harry.lin@stonybrook.com
 -- Company     : Stony Brook
@@ -58,3 +58,4 @@ begin
 
 
 end architecture behavioral;
+
