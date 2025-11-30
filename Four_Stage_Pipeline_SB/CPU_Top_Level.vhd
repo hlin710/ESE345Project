@@ -26,7 +26,11 @@ use work.all;
 entity CPU_Top_Level is
 	port(
 		clk : in STD_LOGIC;
-		rst : in STD_LOGIC
+		rst : in STD_LOGIC;
+		
+		load_enable : in STD_LOGIC;
+		load_addr : in unsigned(5 downto 0);
+		load_data : in STD_LOGIC_VECTOR(24 downto 0)
 	);
 end CPU_Top_Level;
 
@@ -110,9 +114,9 @@ architecture structural of CPU_Top_Level is
 				clk => clk,
 				pc_addr => pc, -- from Program Counter
 				instruction => instr_if, -- fetched instruction into IF/ID
-				load_enable => '0',	-- TB will override
-				load_addr => (others => '0'), -- ignored
-				load_data => (others => '0') -- ignored
+				load_enable => load_enable,	-- TB will override
+				load_addr => load_addr, 
+				load_data => load_data 
 			);
 		-------------------------------------------------------------------------
 		-- IF/ID Reg
