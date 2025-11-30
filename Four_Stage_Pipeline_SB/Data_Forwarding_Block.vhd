@@ -27,10 +27,13 @@ use work.all;
 
 entity Data_Forwarding_Block is
 	port(
-		idex_rs1 : in unsigned(4 downto 0);
-		idex_rs2 : in unsigned(4 downto 0);
-		idex_rs3 : in unsigned(4 downto 0);
-		idex_uses_rs3 : in STD_LOGIC; -- only used for R4 instructions
+		id_ex_rs1 : in unsigned(4 downto 0);
+		id_ex_rs2 : in unsigned(4 downto 0);
+		id_ex_rs3 : in unsigned(4 downto 0);
+		
+		id_ex_uses_rs1 : in STD_LOGIC;
+		id_ex_uses_rs2 : in STD_LOGIC;
+		id_ex_uses_rs3 : in STD_LOGIC; -- only used for R4 instructions
 		
 		-- Inputs from the EX/WB stage
 		ex_wb_rd : in unsigned(4 downto 0);
@@ -45,27 +48,27 @@ end Data_Forwarding_Block;
 
 architecture behavioral of Data_Forwarding_Block is
 begin
-	process(idex_rs1, idex_rs2, idex_rs3, ex_wb_rd, ex_wb_regWrite, idex_uses_rs3)
+	process(all)
 	begin
-		-- Forward to rs1
-		if ex_wb_regWrite = '1' and ex_wb_rd = idex_rs1 and ex_wb_rd /= "00000" then
-			sel_rs1 <= '1';
-		else
-			sel_rs1 <= '0';
-		end if;
 		
-		-- Forward to rs2
-		if ex_wb_regWrite = '1' and ex_wb_rd = idex_rs2 and ex_wb_rd /= "00000" then
-			sel_rs2 <= '1';
-		else
-			sel_rs2 <= '0';
-		end if;
+		-- Default (no forwarding)
+		sel_rs1 <= '0';
+		sel_rs2 <= '0';
+		sel_rs3 <= '0';
 		
-		-- Forward to rs3 but only if r4 uses rs3
-		if idex_uses_rs3 = '1' and ex_wb_regWrite = '1' and ex_wb_rd = idex_rs3 and ex_wb_rd /= "00000" then
-			sel_rs3 <= '1';
-		else
-			sel_rs3 <= '0';
+		if ex_wb_regWrite = '1' and ex_wb_rd /= "00000" then -- ignore forwrafing from r0 (ex_wb_rd does not equal 00000 = r0)
+			-- Forward to rs1
+			if id_ex_uses_rs1 = '1' and ex_wb_rd = id_ex_rs1 then
+				sel_rs1 <= '1';
+            end if;
+			-- Forward to rs2
+            if id_ex_uses_rs2 = '1' and ex_wb_rd = id_ex_rs2 then
+                sel_rs2 <= '1';
+            end if;
+			-- Forward to rs3 but only if R4 instruction format uses rs3
+            if id_ex_uses_rs3 = '1' and ex_wb_rd = id_ex_rs3 then
+                sel_rs3 <= '1';
+            end if;
 		end if;
 	end process;
 end behavioral;

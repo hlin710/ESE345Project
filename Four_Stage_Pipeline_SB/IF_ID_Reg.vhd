@@ -29,7 +29,7 @@ entity IF_ID_Reg is
 		clk : in STD_LOGIC;
 		rst : in STD_LOGIC;
 		
-		ifid_freeze : in STD_LOGIC; -- Stall control 
+		if_id_freeze : in STD_LOGIC; -- Stall control 
 		
 		instruction_in : in STD_LOGIC_VECTOR(24 downto 0); -- Fetched instruction 
 		instruction_out : out STD_LOGIC_VECTOR(24 downto 0) -- Instruction passed to ID
@@ -43,7 +43,7 @@ begin
 		if rising_edge(clk) then 
 			if rst = '1' then -- Reset to flush pipeline
 				instruction_out <= (others => '0');
-			elsif ifid_freeze = '0' then
+			elsif if_id_freeze = '0' then
 				instruction_out <= instruction_in; -- Latch instruction
 			end if;
 		end if;

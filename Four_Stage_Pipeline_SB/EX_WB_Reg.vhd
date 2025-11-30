@@ -29,7 +29,7 @@ entity EX_WB_Reg is
 		clk : in STD_LOGIC;
 		rst : in STD_LOGIC;
 		
-		exwb_freeze : in STD_LOGIC := '0'; -- Stall control
+		ex_wb_freeze : in STD_LOGIC := '0'; -- Stall control
 		
 		-- Data coming in from the execute stage
 		rd_result_in : in STD_LOGIC_VECTOR(127 downto 0);
@@ -55,7 +55,7 @@ begin
 				rd_result_reg <= (others => '0');
 				rd_index_reg <= (others => '0');
 				reg_write_reg <= '0';
-			elsif exwb_freeze = '0' then
+			elsif ex_wb_freeze = '0' then
 				rd_result_reg <= rd_result_in;
 				rd_index_reg <= rd_index_in;
 				reg_write_reg <= reg_write_in;

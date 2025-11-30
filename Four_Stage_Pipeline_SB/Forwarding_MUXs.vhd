@@ -31,11 +31,11 @@ entity Forwarding_MUXs is
 		rs1_in : in STD_LOGIC_VECTOR(127 downto 0);
 		rs2_in : in STD_LOGIC_VECTOR(127 downto 0);
 		rs3_in : in STD_LOGIC_VECTOR(127 downto 0);
-		opcode : in STD_LOGIC_VECTOR(7 downto 0);
+		--opcode : in STD_LOGIC_VECTOR(7 downto 0);
 		
 		-- Inputs from the EX/WB pipeline register (new data)
 		EX_WB_res : in STD_LOGIC_VECTOR(127 downto 0);
-		rd_EX_WB_index : in STD_LOGIC_VECTOR(4 downto 0);
+		--rd_EX_WB_index : in STD_LOGIC_VECTOR(4 downto 0);
 		
 		-- Forwarding selection signals
 		sel_rs1 : in STD_LOGIC;
@@ -51,7 +51,7 @@ end Forwarding_MUXs;
 
 architecture behavioral of Forwarding_MUXs is
 begin
-	process(rs1_in, rs2_in, rs3_in, EX_WB_res, sel_rs1, sel_rs2, sel_rs3)
+	process(all)
 	begin
 		if sel_rs1 = '1' then
 			rs1_res <= EX_WB_res; -- Forward
