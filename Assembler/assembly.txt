@@ -1,5 +1,28 @@
-li r1, 0, 15
-li r2, 0, 5
-au r3, r1, r2
-simal r4, r1, r2, r3
+li r1, 1, 15
+
+simal r4, r2, r3, r4
+simah r5, r1, r2, r3
+simsl r6, r1, r2, r5
+simsh r1, r1, r4, r5
+
+slmal r31, r1, r2, r3
+slmah r30, r2, r3, r4
+slmsl r15, r5, r9, r10
+slmsh r20, r17, r18, r19
+
 nop
+shrhi r1, r2, r3
+au r4, r5, r6
+cnt1h r7, r8, r9
+ahs r10, r11, r12
+or r13, r14, r15
+bcw r16, r17, r18
+maxws r19, r20, r21
+minws r22, r23, r24
+mlhu r25, r26, r27
+mlhcu r28, r29, r30
+and r3, r4, r5
+clzw r6, r7, r8
+rotw r9, r10, r11
+sfwu r12, r13, r14
+sfhs r15, r16, r17
